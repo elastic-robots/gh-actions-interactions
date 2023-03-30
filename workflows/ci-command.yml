@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# limit the access of the generated GITHUB_TOKEN
+permissions:
+  contents: read
+
+jobs:
+  test-tav:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/test module')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+		outputs:
+      result: ${{ steps.is_admin.outputs.result }}
+		steps:
+		  - name: Notify - started
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              await github.rest.reactions.createForIssueComment({
+                ...context.repo,
+                comment_id: context.payload.comment.id,
+                content: 'eyes',
+              })
+              const actorPermission = (await github.rest.repos.getCollaboratorPermissionLevel({
+                ...context.repo,
+                username: context.actor
+              })).data.permission
+              const isPermitted = ['write', 'admin'].includes(actorPermission)
+              if (!isPermitted) {
+                const errorMessage = 'Only users with write permission to the respository can run `/test module`'
+                await github.rest.issues.createComment({
+                  ...context.repo,
+                  issue_number: context.issue.number,
+                  body: errorMessage,
+                })
+                core.setFailed(errorMessage)
+                return;
+              }
+              const pullRequest = await github.rest.pulls.get({
+                ...context.repo,
+                pull_number: context.issue.number,
+              })
+              // Pull request from fork
+              if (context.payload.repository.full_name !== pullRequest.data.head.repo.full_name) {
+                const errorMessage = '`test module` is not supported on pull requests from forked repositories.'
+                await github.rest.issues.createComment({
+                  ...context.repo,
+                  issue_number: context.issue.number,
+                  body: errorMessage,
+                })
+                core.setFailed(errorMessage)
+              }
+            } catch (err) {
+              core.setFailed(`Request failed with error ${err}`)
+            }
+      - uses: actions/checkout@v3
+      - run: echo 'hi'
+        env:
+          ELASTIC_APM_CONTEXT_MANAGER: ''
