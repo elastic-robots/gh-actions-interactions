@@ -17,10 +17,8 @@ jobs:
     if: github.event.issue.pull_request && contains(github.event.comment.body, '/test module')
     runs-on: ubuntu-latest
     timeout-minutes: 5
-		outputs:
-      result: ${{ steps.is_admin.outputs.result }}
-		steps:
-		  - name: Notify - started
+    steps:
+      - name: Notify - started
         uses: actions/github-script@v6
         with:
           script: |
