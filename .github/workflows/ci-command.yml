@@ -33,6 +33,7 @@ jobs:
                 comment_id: context.payload.comment.id,
                 content: 'eyes',
               })
+              core.exportVariable('PR_NUMBER', context.payload.issue.number)
               const actorPermission = (await github.rest.repos.getCollaboratorPermissionLevel({
                 ...context.repo,
                 username: context.actor
@@ -53,7 +54,7 @@ jobs:
             }
       - uses: actions/checkout@v3
         with:
-          ref: refs/pull/${{ github.issue.number }}/merge
+          ref: refs/pull/${{ env.PR_NUMBER }}/merge
       - run: echo 'hi'
         env:
           ELASTIC_APM_CONTEXT_MANAGER: ''
