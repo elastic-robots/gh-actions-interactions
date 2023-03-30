@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   test-tav:
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '/test module')
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/test module')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -27,31 +27,43 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            try {
-              await github.rest.reactions.createForIssueComment({
+            await github.rest.reactions.createForIssueComment({
+              ...context.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            })
+            core.exportVariable('PR_NUMBER', context.payload.issue.number)
+            const actorPermission = (await github.rest.repos.getCollaboratorPermissionLevel({
+              ...context.repo,
+              username: context.actor
+            })).data.permission
+            const isPermitted = ['write', 'admin'].includes(actorPermission)
+            if (!isPermitted) {
+              const errorMessage = 'Only users with write permission to the respository can run `/test module`'
+              await github.rest.issues.createComment({
                 ...context.repo,
-                comment_id: context.payload.comment.id,
-                content: 'eyes',
+                issue_number: context.issue.number,
+                body: errorMessage,
               })
-              core.exportVariable('PR_NUMBER', context.payload.issue.number)
-              const actorPermission = (await github.rest.repos.getCollaboratorPermissionLevel({
-                ...context.repo,
-                username: context.actor
-              })).data.permission
-              const isPermitted = ['write', 'admin'].includes(actorPermission)
-              if (!isPermitted) {
-                const errorMessage = 'Only users with write permission to the respository can run `/test module`'
-                await github.rest.issues.createComment({
-                  ...context.repo,
-                  issue_number: context.issue.number,
-                  body: errorMessage,
-                })
-                core.setFailed(errorMessage)
-                return;
-              }
-            } catch (err) {
-              core.setFailed(`Request failed with error ${err}`)
+              core.setFailed(errorMessage)
+              return;
             }
+            // Transform comment in the right data structure to be consumed later on
+            const comment = context.payload.comment.body
+            const regexpSize = /\/test module (.+) in (.+)/
+            const match = comment.match(regexpSize)
+            if (match[1]) {
+              const modules = match[1].replace(/\s/g, '').split(',')
+              console.log(`modules: ${modules}`)
+              core.exportVariable('MODULES', modules)
+            }
+            if (match[2]) {
+              const nodes = match[2].replace(/\s/g, '').split(',')
+              console.log(`nodes: ${nodes}`)
+              core.exportVariable('NODES', nodes)
+            }
+
+      - run: echo ${{ env.MODULES }} && echo ${{ env.NODES }}
       - uses: actions/checkout@v3
         with:
           ref: refs/pull/${{ env.PR_NUMBER }}/merge

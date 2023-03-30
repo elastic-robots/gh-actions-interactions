@@ -1,0 +1,16 @@
+{
+	"actor": "v1v",
+	"repo": "elastic-robots/gh-actions-interactions",
+	"issue": {
+		"pull_request": {
+			"head": {
+				"ref": "sample-head-ref"
+			}
+		},
+		"number": 2
+	},
+	"comment": {
+		"body" : "/test module a,b,c,d in 1.18,1.19",
+		"id" : "1490611672"
+	}
+}
