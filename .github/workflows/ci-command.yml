@@ -10,7 +10,7 @@ concurrency:
 
 # limit the access of the generated GITHUB_TOKEN
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test-tav:
