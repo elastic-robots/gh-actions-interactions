@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: View context attributes
+        uses: actions/github-script@v6
+        with:
+          script: console.log(context)
       - name: Notify - started
         uses: actions/github-script@v6
         with:
@@ -48,6 +52,8 @@ jobs:
               core.setFailed(`Request failed with error ${err}`)
             }
       - uses: actions/checkout@v3
+        with:
+          ref: refs/pull/${{ env.PR_NUMBER || '1' }}/merge
       - run: echo 'hi'
         env:
           ELASTIC_APM_CONTEXT_MANAGER: ''
