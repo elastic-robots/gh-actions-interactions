@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   test-tav:
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '/test module')
+    if: github.event.issue.pull_request && github.event.comment.body == '/test module'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
