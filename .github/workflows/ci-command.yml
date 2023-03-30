@@ -65,3 +65,23 @@ jobs:
       - run: echo 'hi'
         env:
           ELASTIC_APM_CONTEXT_MANAGER: ''
+      - name: Notify - success
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              ...context.repo,
+              comment_id: context.payload.comment.id,
+              content: '+1',
+            })
+      - name: Notify - failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              ...context.repo,
+              comment_id: context.payload.comment.id,
+              content: '-1',
+            })
