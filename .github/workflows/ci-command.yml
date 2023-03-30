@@ -44,20 +44,6 @@ jobs:
                 core.setFailed(errorMessage)
                 return;
               }
-              const pullRequest = await github.rest.pulls.get({
-                ...context.repo,
-                pull_number: context.issue.number,
-              })
-              // Pull request from fork
-              if (context.payload.repository.full_name !== pullRequest.data.head.repo.full_name) {
-                const errorMessage = '`test module` is not supported on pull requests from forked repositories.'
-                await github.rest.issues.createComment({
-                  ...context.repo,
-                  issue_number: context.issue.number,
-                  body: errorMessage,
-                })
-                core.setFailed(errorMessage)
-              }
             } catch (err) {
               core.setFailed(`Request failed with error ${err}`)
             }
