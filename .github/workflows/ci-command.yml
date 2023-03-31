@@ -36,7 +36,7 @@ jobs:
             core.exportVariable('PR_NUMBER', context.payload.issue.number)
             // Transform comment in the right data structure to be consumed later on
             const comment = context.payload.comment.body
-            const regexpSize = /\/test module (.+) in (.+)/
+            const regexpSize = /\/test tav (.+) in (.+)/
             const match = comment.match(regexpSize)
             if (match[1]) {
               const modules = match[1].replace(/\s/g, '').split(',')
