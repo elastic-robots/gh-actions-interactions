@@ -23,31 +23,11 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: console.log(context)
-      - name: Notify - started
+      - uses: elastic/apm-pipeline-library/.github/actions/validate-github-comment@feature/is-comment-supported
+      - name: Transform comment to the supported matrix
         uses: actions/github-script@v6
         with:
           script: |
-            await github.rest.reactions.createForIssueComment({
-              ...context.repo,
-              comment_id: context.payload.comment.id,
-              content: 'eyes',
-            })
-            core.exportVariable('PR_NUMBER', context.payload.issue.number)
-            const actorPermission = (await github.rest.repos.getCollaboratorPermissionLevel({
-              ...context.repo,
-              username: context.actor
-            })).data.permission
-            const isPermitted = ['write', 'admin'].includes(actorPermission)
-            if (!isPermitted) {
-              const errorMessage = 'Only users with write permission to the respository can run `/test module`'
-              await github.rest.issues.createComment({
-                ...context.repo,
-                issue_number: context.issue.number,
-                body: errorMessage,
-              })
-              core.setFailed(errorMessage)
-              return;
-            }
             // Transform comment in the right data structure to be consumed later on
             const comment = context.payload.comment.body
             const regexpSize = /\/test module (.+) in (.+)/
