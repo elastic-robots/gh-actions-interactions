@@ -45,7 +45,7 @@ jobs:
           ref: refs/pull/${{ env.PR_NUMBER }}/merge
 
       - id: generate-matrix
-        run: generate-github-matrix.sh
+        run: ./generate-github-matrix.sh
 
 
   test-tav:

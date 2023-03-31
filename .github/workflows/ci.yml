@@ -24,7 +24,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - id: generate-matrix
-      run: generate-github-matrix.sh
+      run: ./generate-github-matrix.sh
 
   test-tav:
     needs: prepare-matrix
