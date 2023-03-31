@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   test-tav:
-    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/test module')
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/test tav')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -23,11 +23,14 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: console.log(context)
+
       - uses: elastic/apm-pipeline-library/.github/actions/validate-github-comment@feature/is-comment-supported
+
       - name: Transform comment to the supported matrix
         uses: actions/github-script@v6
         with:
           script: |
+            core.exportVariable('PR_NUMBER', context.payload.issue.number)
             // Transform comment in the right data structure to be consumed later on
             const comment = context.payload.comment.body
             const regexpSize = /\/test module (.+) in (.+)/
@@ -50,6 +53,7 @@ jobs:
       - run: echo 'hi'
         env:
           ELASTIC_APM_CONTEXT_MANAGER: ''
+
       - name: Notify - success
         if: success()
         uses: actions/github-script@v6
@@ -58,15 +62,5 @@ jobs:
             await github.rest.reactions.createForIssueComment({
               ...context.repo,
               comment_id: context.payload.comment.id,
-              content: '+1',
-            })
-      - name: Notify - failure
-        if: failure()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            await github.rest.reactions.createForIssueComment({
-              ...context.repo,
-              comment_id: context.payload.comment.id,
-              content: '-1',
+              content: 'heart',
             })
