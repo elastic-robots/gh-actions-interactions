@@ -14,20 +14,17 @@ permissions:
   pull-requests: write
 
 jobs:
-  test-tav:
+  command-validation:
     if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/test tav')
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      versions: ${{ steps.generate-matrix.outputs.versions }}
+      modules: ${{ steps.generate-matrix.outputs.modules }}
+      pull-request: ${{ steps.generate-matrix.outputs.pull-request }}
     steps:
-      ##
-      ## PRE-FLIGHT CHECKS
-      ##
-      - name: View context attributes
-        uses: actions/github-script@v6
-        with:
-          script: console.log(context)
-
-      - uses: elastic/apm-pipeline-library/.github/actions/validate-github-comment@feature/is-comment-supported
+      - name: Validate github comment
+        uses: elastic/apm-pipeline-library/.github/actions/validate-github-comment@main
 
       - name: Transform comment to the supported matrix
         uses: actions/github-script@v6
@@ -35,29 +32,37 @@ jobs:
           script: |
             core.exportVariable('PR_NUMBER', context.payload.issue.number)
             // Transform comment in the right data structure to be consumed later on
-            const comment = context.payload.comment.body
-            const regexpSize = /\/test tav (.+) in (.+)/
-            const match = comment.match(regexpSize)
-            if (match[1]) {
-              const modules = match[1].replace(/\s/g, '').split(',')
-              console.log(`modules: ${modules}`)
-              core.exportVariable('MODULES', modules)
-            }
-            if (match[2]) {
-              const nodes = match[2].replace(/\s/g, '').split(',')
-              console.log(`nodes: ${nodes}`)
-              core.exportVariable('NODES', nodes)
-            }
-      ##
-      ## BUILD
-      ##
-      - run: echo ${{ env.MODULES }} && echo ${{ env.NODES }}
+            //const comment = context.payload.comment.body
+            //const regexpSize = /\/test tav (.+) in (.+)/
+            //const match = comment.match(regexpSize)
+            //if (match[1]) {
+            //  const modules = match[1].replace(/\s/g, '').split(',')
+            //  console.log(`modules: ${modules}`)
+            //  core.exportVariable('MODULES', modules)
+            //}
       - uses: actions/checkout@v3
         with:
           ref: refs/pull/${{ env.PR_NUMBER }}/merge
-      - run: echo 'hi'
-        env:
-          ELASTIC_APM_CONTEXT_MANAGER: ''
+
+      - id: generate-matrix
+        run: generate-github-matrix.sh
+
+
+  test-tav:
+    needs: command-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      max-parallel: 20
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(needs.command-validation.outputs.versions) }}
+        module: ${{ fromJSON(needs.command-validation.outputs.modules) }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: refs/pull/${{ needs.command-validation.outputs.pull-request }}/merge
+      - run: echo '"${{ matrix.module }}" "${{ matrix.node }}"'
 
       ##
       ## POST-BUILD notifications
