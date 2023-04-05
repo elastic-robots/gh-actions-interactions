@@ -46,7 +46,7 @@ jobs:
               core.setOutput('modules', modules)
             }
             if (match[2]) {
-              const versions = match[1].replace(/\s/g, '').split(',')
+              const versions = match[2].replace(/\s/g, '').split(',')
               console.log(`versions: ${versions}`)
               core.setOutput('versions', versions)
             }
