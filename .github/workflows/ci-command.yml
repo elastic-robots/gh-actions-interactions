@@ -62,7 +62,7 @@ jobs:
               core.setOutput('versions', versions)
               return
             }
-            const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]+)/
+            const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]*)/
             const match = comment.match(regex)
             console.log(`parse comment - ${match}`)
             if (match[1]) {
