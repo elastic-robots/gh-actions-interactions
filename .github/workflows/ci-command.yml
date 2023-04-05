@@ -56,21 +56,20 @@ jobs:
               return
             }
             const comment = context.payload.comment.body
-            if (comment === '/test tav') {
-              core.setOutput('modules', modules)
-              core.setOutput('versions', versions)
-              return
+            if (comment !== '/test tav') {
+              const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]*)/
+              const match = comment.match(regex)
+              console.log(`parse comment - ${match}`)
+              if (match[1]) {
+                if (match[1] !== 'all') {
+                  modules = match[1].split(',')
+                }
+              }
+              if (match[3]) {
+                versions = match[3].split(',')
+              }
             }
-            const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]*)/
-            const match = comment.match(regex)
-            console.log(`parse comment - ${match}`)
-            if (match[1]) {
-              modules = match[1].split(',')
-              core.setOutput('modules', modules)
-            }
-            if (match[3]) {
-              versions = match[3].split(',')
-            }
+            core.setOutput('modules', modules)
             core.setOutput('versions', versions)
 
   test-tav:
