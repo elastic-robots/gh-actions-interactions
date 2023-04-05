@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      versions: ${{ steps.generate-matrix.outputs.versions }}
+      versions: ${{ steps.transform.outputs.versions }}
       modules: ${{ steps.transform.outputs.modules }}
       pull-request: ${{ steps.transform.outputs.pull-request }}
     steps:
@@ -36,16 +36,19 @@ jobs:
               core.exportVariable('ALL', 'ALL')
               return
             }
-            console.log('parse modules')
             // Transform comment in the right data structure to be consumed later on
             const comment = context.payload.comment.body
-            const regexpSize = /\/test tav (.+)/
+            const regexpSize = /\/test tav (.+) (.+)/
             const match = comment.match(regexpSize)
             if (match[1]) {
               const modules = match[1].replace(/\s/g, '').split(',')
               console.log(`modules: ${modules}`)
-              core.exportVariable('MODULES', modules)
               core.setOutput('modules', modules)
+            }
+            if (match[2]) {
+              const versions = match[1].replace(/\s/g, '').split(',')
+              console.log(`versions: ${versions}`)
+              core.setOutput('versions', versions)
             }
 
       - uses: actions/checkout@v3
