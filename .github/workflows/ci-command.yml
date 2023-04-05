@@ -52,6 +52,8 @@ jobs:
                 const matrix = JSON.parse(jsonString)
                 versions = matrix.versions
                 modules = matrix.modules
+                console.log(`modules: ${modules}`)
+                console.log(`versions: ${versions}`)
                 console.log(`read json file - done`)
               } catch (err) {
                 core.setFailed("Error parsing JSON string")
