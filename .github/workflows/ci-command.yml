@@ -21,19 +21,40 @@ jobs:
     outputs:
       versions: ${{ steps.transform.outputs.versions }}
       modules: ${{ steps.transform.outputs.modules }}
-      pull-request: ${{ steps.transform.outputs.pull-request }}
+      pull-request: ${{ steps.pr.outputs.number }}
     steps:
       - name: Validate github comment
         uses: elastic/apm-pipeline-library/.github/actions/validate-github-comment@main
+
+      - id: pr
+        uses: actions/github-script@v6
+        with:
+          script: core.setOutput('number', context.payload.issue.number)
+
+      - uses: actions/checkout@v3
+        with:
+          ref: refs/pull/${{ steps.pr.outputs.number }}/merge
+
       - id: transform
         name: Transform comment to the supported matrix
         uses: actions/github-script@v6
         with:
           script: |
-            core.setOutput('pull-request', context.payload.issue.number)
             if ('${{ github.event.comment.body }}' === '/test tav') {
-              console.log('all')
-              core.exportVariable('ALL', 'ALL')
+              const fs = require("fs");
+              fs.readFile("./matrix.json", "utf8", (err, jsonString) => {
+                if (err) {
+                  core.setFailed("Error reading file from disk")
+                  return
+                }
+                try {
+                  const matrix = JSON.parse(jsonString)
+                  core.setOutput('modules', matrix.modules)
+                  core.setOutput('versions', matrix.versions)
+                } catch (err) {
+                  core.setFailed("Error parsing JSON string")
+                }
+              })
               return
             }
             // Transform comment in the right data structure to be consumed later on
@@ -50,13 +71,6 @@ jobs:
               console.log(`versions: ${versions}`)
               core.setOutput('versions', versions)
             }
-
-      - uses: actions/checkout@v3
-        with:
-          ref: refs/pull/${{ steps.transform.outputs.pull-request }}/merge
-
-      - id: generate-matrix
-        run: ./generate-github-matrix.sh
 
   test-tav:
     needs: command-validation
