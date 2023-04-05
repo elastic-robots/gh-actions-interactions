@@ -70,6 +70,7 @@ jobs:
               console.log(`modules: ${modules}`)
               core.setOutput('modules', modules)
             }
+            console.log(`match: ${match}`)
             if (!match[2]) {
               core.setOutput('versions', defaultVersions)
             } else {
