@@ -66,13 +66,13 @@ jobs:
             const match = comment.match(regexpSize)
             if (match[1]) {
               const modules = match[1].replace(/\s/g, '').split(',')
+              console.log(`modules: ${modules}`)
               core.setOutput('modules', modules)
             }
             var versions = defaultVersions
             if (match[3]) {
               versions = match[3].replace(/\s/g, '').split(',')
             }
-            console.log(`modules: ${modules}`)
             console.log(`versions: ${versions}`)
             core.setOutput('versions', versions)
 
