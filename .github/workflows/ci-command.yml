@@ -62,8 +62,8 @@ jobs:
               return
             }
             const comment = context.payload.comment.body
-            const regexpSize = /\/test tav (.+)(\s*)(.*)/
-            const match = comment.match(regexpSize)
+            const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]+)/
+            const match = comment.match(regex)
             if (match[1]) {
               const modules = match[1].replace(/\s/g, '').split(',')
               console.log(`modules: ${modules}`)
