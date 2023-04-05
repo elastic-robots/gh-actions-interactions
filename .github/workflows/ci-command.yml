@@ -56,9 +56,9 @@ jobs:
                 core.setFailed("Error parsing JSON string")
               }
             })
+            core.setOutput('modules', defaultModules)
+            core.setOutput('versions', defaultVersions)
             if ('${{ github.event.comment.body }}' === '/test tav') {
-              core.setOutput('modules', defaultModules)
-              core.setOutput('versions', defaultVersions)
               return
             }
             const comment = context.payload.comment.body
@@ -69,12 +69,10 @@ jobs:
               console.log(`modules: ${modules}`)
               core.setOutput('modules', modules)
             }
-            if (match[2]) {
-              const versions = match[2].replace(/\s/g, '').split(',')
+            if (match[3]) {
+              const versions = match[3].replace(/\s/g, '').split(',')
               console.log(`versions: ${versions}`)
               core.setOutput('versions', versions)
-            } else {
-              core.setOutput('versions', defaultVersions)
             }
 
   test-tav:
