@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       versions: ${{ steps.generate-matrix.outputs.versions }}
-      modules: ${{ steps.generate-matrix.outputs.modules }}
+      modules: ${{ steps.transform.outputs.modules }}
       pull-request: ${{ steps.transform.outputs.pull-request }}
     steps:
       - name: Validate github comment
@@ -45,6 +45,7 @@ jobs:
               const modules = match[1].replace(/\s/g, '').split(',')
               console.log(`modules: ${modules}`)
               core.exportVariable('MODULES', modules)
+              core.setOutput('modules', modules)
             }
 
       - uses: actions/checkout@v3
@@ -53,7 +54,6 @@ jobs:
 
       - id: generate-matrix
         run: ./generate-github-matrix.sh
-
 
   test-tav:
     needs: command-validation
