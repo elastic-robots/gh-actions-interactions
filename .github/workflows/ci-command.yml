@@ -41,7 +41,7 @@ jobs:
         with:
           script: |
             const fs = require("fs")
-            var modules, versions
+            let modules, versions
             fs.readFile("./matrix.json", "utf8", (err, jsonString) => {
               console.log(`read json file - started`)
               if (err) {
