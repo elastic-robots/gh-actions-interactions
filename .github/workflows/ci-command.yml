@@ -56,18 +56,15 @@ jobs:
               }
             })
             const comment = context.payload.comment.body
-            if (comment === '/test tav') {
-              core.setOutput('modules', modules)
-              core.setOutput('versions', versions)
-              return
-            }
-            const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]+)/
-            const match = comment.match(regex)
-            if (match[1]) {
-              modules = match[1].replace(/\s/g, '').split(',')
-            }
-            if (match[3]) {
-              versions = match[3].replace(/\s/g, '').split(',')
+            if (comment !== '/test tav') {
+              const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]+)/
+              const match = comment.match(regex)
+              if (match[1]) {
+                modules = match[1].replace(/\s/g, '').split(',')
+              }
+              if (match[3]) {
+                versions = match[3].replace(/\s/g, '').split(',')
+              }
             }
             core.setOutput('modules', modules)
             core.setOutput('versions', versions)
