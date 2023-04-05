@@ -43,7 +43,6 @@ jobs:
             const fs = require("fs")
             let modules, versions
             fs.readFile("./matrix.json", "utf8", (err, jsonString) => {
-              console.log(`read json file - started`)
               if (err) {
                 core.setFailed("Error reading file from disk")
                 return
@@ -52,34 +51,28 @@ jobs:
                 const matrix = JSON.parse(jsonString)
                 versions = matrix.versions
                 modules = matrix.modules
-                console.log(`modules: ${modules}`)
-                console.log(`versions: ${versions}`)
-                console.log(`read json file - done`)
               } catch (err) {
                 core.setFailed("Error parsing JSON string")
                 return
               }
             })
             const comment = context.payload.comment.body
-            if (comment !== '/test tav') {
-              console.log(`parse comment - started`)
-              const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]+)/
-              const match = comment.match(regex)
-              console.log(`parse comment - ${match}`)
-              if (match[1]) {
-                console.log(`parse comment - match 1 found`)
-                modules = match[1].replace(/\s/g, '').split(',')
-              }
-              if (match[3]) {
-                console.log(`parse comment - match 3 found`)
-                versions = match[3].replace(/\s/g, '').split(',')
-              }
-              console.log(`parse comment - done`)
+            if (comment === '/test tav') {
+              core.setOutput('modules', modules)
+              core.setOutput('versions', versions)
+              return
             }
-            core.setOutput('modules', modules)
+            const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]+)/
+            const match = comment.match(regex)
+            console.log(`parse comment - ${match}`)
+            if (match[1]) {
+              modules = match[1].replace(/\s/g, '').split(',')
+              core.setOutput('modules', modules)
+            }
+            if (match[3]) {
+              versions = match[3].replace(/\s/g, '').split(',')
+            }
             core.setOutput('versions', versions)
-            console.log(`modules: ${modules}`)
-            console.log(`versions: ${versions}`)
 
   test-tav:
     needs: command-validation
