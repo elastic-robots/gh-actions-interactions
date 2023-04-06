@@ -56,7 +56,7 @@ jobs:
               const regex = /\/test tav ([^\s]+)(\s*)([^\s]*)/
               const match = comment.match(regex)
               if (!match) {
-                core.setFailed(`Incorrect comment, please use /test tav(\s(module1,...,moduleN)?(\n)?(node1,...,nodeN)?)?'`)
+                core.setFailed(`Incorrect comment, please use /test tav(\\s(module1,...,moduleN)?(\\s)?(node1,...,nodeN)?)?'`)
                 return
               }
               if (match[1]) {
@@ -70,6 +70,17 @@ jobs:
             }
             core.setOutput('modules', modules)
             core.setOutput('versions', versions)
+
+      - name: Notify - failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              ...context.repo,
+              comment_id: steps.pr.outputs.number,
+              content: '-1',
+            })
 
   test-tav:
     needs: command-validation
