@@ -78,7 +78,7 @@ jobs:
           script: |
             await github.rest.reactions.createForIssueComment({
               ...context.repo,
-              comment_id: ${{ steps.pr.outputs.number }},
+              comment_id: context.payload.comment.id,
               content: '-1',
             })
 
