@@ -57,6 +57,7 @@ jobs:
               const match = comment.match(regex)
               if (!match) {
                 core.setFailed(`Incorrect comment, please use /test tav(\s(module1,...,moduleN)?(\n)?(node1,...,nodeN)?)?'`)
+                return
               }
               if (match[1]) {
                 if (match[1] !== 'all') {
