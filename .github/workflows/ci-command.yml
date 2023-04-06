@@ -40,26 +40,24 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            async function f() {
-              const fsPromises = require('fs').promises;
-              const data = await fsPromises.readFile('./matrix.json')
-                                 .catch((err) => core.setFailed('Failed to read file', err));
-              return JSON.parse(data.toString());
-            }
-            const matrix = await f()
+            const fs = require('fs')
+
             let modules, versions
             try {
+              const matrix = JSON.parse(fs.readFileSync('./matrix.json'))
               versions = matrix.versions
               modules = matrix.modules
             } catch (err) {
-              core.setFailed("Error parsing JSON string")
+              core.setFailed(`Error loading './matrix.json': ${err}`)
               return
             }
             const comment = context.payload.comment.body
             if (comment !== '/test tav') {
-              const regex = /\/test tav ([^\s\\]+)(\s*)([^\s\\]*)/
+              const regex = /\/test tav ([^\s]+)(\s*)([^\s]*)/
               const match = comment.match(regex)
-              console.log(`parse comment - ${match}`)
+              if (!match) {
+                core.setFailed(`Incorrect comment, please use /test tav(\s(module1,...,moduleN)?(\n)?(node1,...,nodeN)?)?'`)
+              }
               if (match[1]) {
                 if (match[1] !== 'all') {
                   modules = match[1].split(',')
