@@ -32,7 +32,7 @@ jobs:
         with:
           script: |
             // Report with a reaction that the event has been listened
-            await github.rest.reactions.createForIssueComment({
+            await github.rest.reactions.createForPullRequestReviewComment({
               ...context.repo,
               comment_id: context.payload.review.id,
               content: '+1',
@@ -99,7 +99,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            await github.rest.reactions.createForIssueComment({
+            await github.rest.reactions.createForPullRequestReviewComment({
               ...context.repo,
               comment_id: context.payload.review.id,
               content: '-1',
@@ -130,7 +130,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            await github.rest.reactions.createForIssueComment({
+            await github.rest.reactions.createForPullRequestReviewComment({
               ...context.repo,
               comment_id: context.payload.review.id,
               content: 'heart',
@@ -141,7 +141,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            await github.rest.reactions.createForIssueComment({
+            await github.rest.reactions.createForPullRequestReviewComment({
               ...context.repo,
               comment_id: context.payload.review.id,
               content: '-1',
