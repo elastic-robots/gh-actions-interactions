@@ -1,7 +1,7 @@
 name: ci-command
 
 on:
-  issue_comment:
+  pull_request_review_comment:
     types: [created]
 
 concurrency:
@@ -15,25 +15,19 @@ permissions:
 
 jobs:
   command-validation:
-    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/test tav')
+    if: startsWith(github.event.comment.body, '/test tav')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       versions: ${{ steps.transform.outputs.versions }}
       modules: ${{ steps.transform.outputs.modules }}
-      pull-request: ${{ steps.pr.outputs.number }}
     steps:
       - name: Validate github comment
         uses: elastic/apm-pipeline-library/.github/actions/validate-github-comment@main
 
-      - id: pr
-        uses: actions/github-script@v6
-        with:
-          script: core.setOutput('number', context.payload.issue.number)
-
       - uses: actions/checkout@v3
         with:
-          ref: refs/pull/${{ steps.pr.outputs.number }}/merge
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - id: transform
         name: Transform comment to the supported matrix
@@ -95,7 +89,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: refs/pull/${{ needs.command-validation.outputs.pull-request }}/merge
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - run: echo '"${{ matrix.module }}" "${{ matrix.node }}"'
 
       ##
