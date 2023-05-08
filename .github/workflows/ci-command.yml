@@ -31,7 +31,7 @@ jobs:
               username: context.actor
             })).data.permission
             const isPermitted = ['write', 'admin'].includes(actorPermission)
-            if (!isPermitted) {
+            if (isPermitted) {
               const errorMessage = 'Only users with write permission to the repository can run GitHub commands'
               await github.rest.issues.createComment({
                 ...context.repo,
