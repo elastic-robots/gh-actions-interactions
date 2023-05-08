@@ -1,7 +1,7 @@
-name: ci
+name: ci-command
 
 on:
-  issue_comment:
+  pull_request_review_comment:
     types: [created]
 
 concurrency:
@@ -14,49 +14,88 @@ permissions:
   pull-requests: write
 
 jobs:
-  test-tav:
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '/test module')
+  command-validation:
+    if: startsWith(github.event.comment.body, '/test tav')
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      versions: ${{ steps.transform.outputs.versions }}
+      modules: ${{ steps.transform.outputs.modules }}
     steps:
-      - name: View context attributes
-        uses: actions/github-script@v6
+      - name: Validate github comment
+        uses: elastic/apm-pipeline-library/.github/actions/validate-github-comment@main
+
+      - uses: actions/checkout@v3
         with:
-          script: console.log(context)
-      - name: Notify - started
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - id: transform
+        name: Transform comment to the supported matrix
         uses: actions/github-script@v6
         with:
           script: |
+            const fs = require('fs')
+
+            let modules, versions
             try {
-              await github.rest.reactions.createForIssueComment({
-                ...context.repo,
-                comment_id: context.payload.comment.id,
-                content: 'eyes',
-              })
-              const actorPermission = (await github.rest.repos.getCollaboratorPermissionLevel({
-                ...context.repo,
-                username: context.actor
-              })).data.permission
-              const isPermitted = ['write', 'admin'].includes(actorPermission)
-              if (!isPermitted) {
-                const errorMessage = 'Only users with write permission to the respository can run `/test module`'
-                await github.rest.issues.createComment({
-                  ...context.repo,
-                  issue_number: context.issue.number,
-                  body: errorMessage,
-                })
-                core.setFailed(errorMessage)
-                return;
-              }
+              const matrix = JSON.parse(fs.readFileSync('./matrix.json'))
+              versions = matrix.versions
+              modules = matrix.modules
             } catch (err) {
-              core.setFailed(`Request failed with error ${err}`)
+              core.setFailed(`Error loading './matrix.json': ${err}`)
+              return
             }
+            const comment = context.payload.comment.body
+            if (comment !== '/test tav') {
+              const regex = /\/test tav ([^\s]+)(\s*)([^\s]*)/
+              const match = comment.match(regex)
+              if (!match) {
+                core.setFailed(`Incorrect comment, please use /test tav(\\s(module1,...,moduleN)?(\\s)?(node1,...,nodeN)?)?'`)
+                return
+              }
+              if (match[1]) {
+                if (match[1] !== 'all') {
+                  modules = match[1].split(',')
+                }
+              }
+              if (match[3]) {
+                versions = match[3].split(',')
+              }
+            }
+            core.setOutput('modules', modules)
+            core.setOutput('versions', versions)
+
+      - name: Notify - failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              ...context.repo,
+              comment_id: context.payload.comment.id,
+              content: '-1',
+            })
+
+  test-tav:
+    needs: command-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      max-parallel: 20
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(needs.command-validation.outputs.versions) }}
+        module: ${{ fromJSON(needs.command-validation.outputs.modules) }}
+    steps:
       - uses: actions/checkout@v3
         with:
-          ref: refs/pull/${{ github.issue.number }}/merge
-      - run: echo 'hi'
-        env:
-          ELASTIC_APM_CONTEXT_MANAGER: ''
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - run: echo '"${{ matrix.module }}" "${{ matrix.node }}"'
+
+      ##
+      ## POST-BUILD notifications
+      ##
       - name: Notify - success
         if: success()
         uses: actions/github-script@v6
@@ -65,8 +104,9 @@ jobs:
             await github.rest.reactions.createForIssueComment({
               ...context.repo,
               comment_id: context.payload.comment.id,
-              content: '+1',
+              content: 'heart',
             })
+
       - name: Notify - failure
         if: failure()
         uses: actions/github-script@v6

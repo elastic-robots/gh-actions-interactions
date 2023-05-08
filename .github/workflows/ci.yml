@@ -1,0 +1,41 @@
+name: Test
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# limit the access of the generated GITHUB_TOKEN
+permissions:
+  contents: read
+
+jobs:
+  prepare-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      versions: ${{ steps.generate-matrix.outputs.versions }}
+      modules: ${{ steps.generate-matrix.outputs.modules }}
+    steps:
+    - uses: actions/checkout@v3
+    - id: generate-matrix
+      run: ./generate-github-matrix.sh
+
+  test-tav:
+    needs: prepare-matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      max-parallel: 10
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(needs.prepare-matrix.outputs.versions) }}
+        module: ${{ fromJSON(needs.prepare-matrix.outputs.modules) }}
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo '"${{ matrix.module }}" "${{ matrix.node }}"'
