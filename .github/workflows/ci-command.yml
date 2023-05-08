@@ -8,11 +8,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # limit the access of the generated GITHUB_TOKEN
-permissions:
-  contents: write
-  issues: write
-  discussions: write
-  pull-requests: write
+permissions: write-all
 
 jobs:
   command-validation:
