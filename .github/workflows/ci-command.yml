@@ -8,7 +8,8 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # limit the access of the generated GITHUB_TOKEN
-permissions: write-all
+permissions:
+  contents: read
 
 jobs:
   command-validation:
@@ -18,18 +19,13 @@ jobs:
     outputs:
       versions: ${{ steps.transform.outputs.versions }}
       modules: ${{ steps.transform.outputs.modules }}
+    permissions:
+      pull-requests: write
     steps:
       - name: Is comment allowed?
         uses: actions/github-script@v6
         with:
           script: |
-            // Report with a reaction that the event has been listened
-            await github.rest.reactions.createForPullRequestReviewComment({
-              ...context.repo,
-              comment_id: context.payload.review.id,
-              content: '+1',
-            })
-
             const actorPermission = (await github.rest.repos.getCollaboratorPermissionLevel({
               ...context.repo,
               username: context.actor
@@ -86,17 +82,6 @@ jobs:
             core.setOutput('modules', modules)
             core.setOutput('versions', versions)
 
-      - name: Notify - failure
-        if: failure()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            await github.rest.reactions.createForPullRequestReviewComment({
-              ...context.repo,
-              comment_id: context.payload.review.id,
-              content: '-1',
-            })
-
   test-tav:
     needs: command-validation
     runs-on: ubuntu-latest
@@ -113,28 +98,3 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - run: echo '"${{ matrix.module }}" "${{ matrix.node }}"'
-
-      ##
-      ## POST-BUILD notifications
-      ##
-      - name: Notify - success
-        if: success()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            await github.rest.reactions.createForPullRequestReviewComment({
-              ...context.repo,
-              comment_id: context.payload.review.id,
-              content: 'heart',
-            })
-
-      - name: Notify - failure
-        if: failure()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            await github.rest.reactions.createForPullRequestReviewComment({
-              ...context.repo,
-              comment_id: context.payload.review.id,
-              content: '-1',
-            })
