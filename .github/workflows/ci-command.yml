@@ -43,7 +43,7 @@ jobs:
               return;
             }
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
@@ -94,7 +94,7 @@ jobs:
         node: ${{ fromJSON(needs.command-validation.outputs.versions) }}
         module: ${{ fromJSON(needs.command-validation.outputs.modules) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
