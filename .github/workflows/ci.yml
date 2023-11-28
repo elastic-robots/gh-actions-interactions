@@ -22,7 +22,7 @@ jobs:
       versions: ${{ steps.generate-matrix.outputs.versions }}
       modules: ${{ steps.generate-matrix.outputs.modules }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - id: generate-matrix
       run: ./generate-github-matrix.sh
 
@@ -37,5 +37,5 @@ jobs:
         node: ${{ fromJSON(needs.prepare-matrix.outputs.versions) }}
         module: ${{ fromJSON(needs.prepare-matrix.outputs.modules) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: echo '"${{ matrix.module }}" "${{ matrix.node }}"'
