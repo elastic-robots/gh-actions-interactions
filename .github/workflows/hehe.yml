@@ -1,0 +1,20 @@
+name: hehe
+
+on:
+  pull_request: ~
+
+jobs:
+  hehe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: test/second-pr
+      - run: |
+          touch hehe.txt
+          git add hehe.txt
+          git commit -m "hehe"
+          git push origin HEAD:test/second-pr
